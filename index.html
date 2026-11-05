@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f3ec">
+  <meta name="description" content="60 слов для поездки. Простые карточки с переводом и примерами, повторение без регистрации.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Слова в дорогу</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand"><img src="./icon.svg" alt="" width="36" height="36"><div><h1>Слова в дорогу</h1><p>Английский для поездки</p></div></div>
+      <div class="controls">
+        <label class="topic-label"><span class="sr-only">Тема карточек</span><select id="topic"><option value="all">Все 60 слов</option><option>Главное</option><option>Ресторан</option><option>Отель</option><option>Поездки</option><option>Общение</option></select></label>
+        <button id="direction" class="direction" aria-label="Сменить направление перевода">RU → EN</button>
+      </div>
+    </header>
+
+    <section id="practice" aria-label="Тренировка">
+      <div class="progress-label"><span id="progress-text">Загружаем слова…</span><span id="remaining"></span></div>
+      <progress id="progress" max="60" value="0" aria-label="Изучено карточек"></progress>
+      <article class="card" id="card">
+        <div class="card-top"><span id="card-topic"></span><span id="card-label">Вспомни по-английски</span></div>
+        <button id="reveal" class="reveal" aria-label="Показать ответ">
+          <span id="prompt" class="prompt"></span>
+          <span id="hint" class="hint">Вспомни слово и нажми на карточку</span>
+          <span id="answer" class="answer" hidden></span>
+          <span id="example" class="example" lang="en" hidden></span>
+        </button>
+        <button id="speak" class="speak" aria-label="Послушать английское слово" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg><span>Послушать</span></button>
+      </article>
+      <div id="actions" class="actions" hidden>
+        <button id="again" class="again">Повторить <span>вернётся позже</span></button>
+        <button id="known" class="known">Знаю <span>следующее слово</span></button>
+      </div>
+      <button id="show" class="show">Показать ответ <span aria-hidden="true">↗</span></button>
+      <p id="status" class="status" aria-live="polite">Карточки перемешаны. Начни с любого слова.</p>
+      <button id="undo" class="text-button" hidden>Отменить последнюю оценку</button>
+    </section>
+
+    <section id="complete" class="complete" hidden>
+      <div class="done-mark" aria-hidden="true">✓</div>
+      <h2>Всё вспомнил.</h2>
+      <p id="complete-text"></p>
+      <button id="restart" class="known">Ещё круг в случайном порядке</button>
+      <button id="undo-complete" class="text-button" hidden>Отменить последнюю оценку</button>
+      <p class="small">Вернись к словам вечером — так проверишь, что осталось в памяти.</p>
+    </section>
+    <footer><span id="storage-note">Прогресс сохраняется на этом устройстве</span><span>Без регистрации</span></footer>
+    <noscript>Для работы карточек включи JavaScript в браузере.</noscript>
+  </main>
+</body>
+</html>
