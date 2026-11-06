@@ -7,12 +7,9 @@ export function shuffle(items, random = Math.random) {
   return result;
 }
 
-export function selected(cards, topic) {
-  return cards.filter(card => topic === 'all' || card.topic === topic);
-}
-
-export function newQueue(cards, topic, known, random = Math.random) {
-  return shuffle(selected(cards, topic).filter(card => !known.includes(card.id)).map(card => card.id), random);
+export function newQueue(cards, known = [], hidden = [], random = Math.random) {
+  const excluded = new Set([...known, ...hidden]);
+  return shuffle(cards.filter(card => !excluded.has(card.id)).map(card => card.id), random);
 }
 
 export function grade(state, isKnown, random = Math.random) {
@@ -28,14 +25,24 @@ export function grade(state, isKnown, random = Math.random) {
   return { ...state, known, queue };
 }
 
+export function exclude(state, id = state.queue[0]) {
+  if (!Number.isInteger(id)) return state;
+  return { ...state, hidden: [...new Set([...state.hidden, id])], known: state.known.filter(value => value !== id), queue: state.queue.filter(value => value !== id) };
+}
+
+export function restart(state, cards) {
+  return { ...state, known: [], queue: newQueue(cards, [], state.hidden) };
+}
+
 export function restore(raw, cards) {
-  const topics = new Set(['all', ...cards.map(card => card.topic)]);
-  const topic = topics.has(raw?.topic) ? raw.topic : 'all';
   const ids = new Set(cards.map(card => card.id));
-  const known = [...new Set(Array.isArray(raw?.known) ? raw.known.filter(id => ids.has(id)) : [])];
-  const eligible = new Set(selected(cards, topic).filter(card => !known.includes(card.id)).map(card => card.id));
-  const saved = Array.isArray(raw?.queue) ? raw.queue : [];
-  const queue = [...new Set(saved.filter(id => eligible.has(id)))];
+  const clean = values => [...new Set(Array.isArray(values) ? values.filter(id => ids.has(id)) : [])];
+  const hidden = clean(raw?.hidden);
+  const known = clean(raw?.known).filter(id => !hidden.includes(id));
+  const eligible = new Set(cards.filter(card => !known.includes(card.id) && !hidden.includes(card.id)).map(card => card.id));
+  const queue = clean(raw?.queue).filter(id => eligible.has(id));
   const missing = [...eligible].filter(id => !queue.includes(id));
-  return { topic, reverse: raw?.reverse === true, known, queue: [...queue, ...shuffle(missing)] };
+  // Older versions stored a single topic. Merge all words and shuffle new additions.
+  const restoredQueue = raw?.version === 2 && !missing.length ? queue : shuffle([...queue, ...missing]);
+  return { version: 2, reverse: raw?.reverse === true, known, hidden, queue: restoredQueue };
 }
