@@ -1,5 +1,5 @@
-import { cards } from './cards.js';
-import { newQueue, grade, restore, exclude, restart } from './engine.js';
+import { cards } from './cards.js?v=3';
+import { newQueue, grade, restore, exclude, restart } from './engine.js?v=3';
 
 const $ = id => document.getElementById(id);
 const key = 'travel-cards-v1';
@@ -174,8 +174,8 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (reloading || !navigator.serviceWorker.controller) return;
     try {
-      if (sessionStorage.getItem('travel-cards-release-v2')) return;
-      sessionStorage.setItem('travel-cards-release-v2', '1');
+      if (sessionStorage.getItem('travel-cards-release-v3')) return;
+      sessionStorage.setItem('travel-cards-release-v3', '1');
     } catch { return; }
     reloading = true;
     location.reload();
