@@ -1,5 +1,5 @@
-import { cards } from './cards.js?v=4';
-import { newQueue, grade, restore, exclude, restart } from './engine.js?v=4';
+import { cards } from './cards.js?v=5';
+import { newQueue, grade, restore, exclude, restart, chooseCloze } from './engine.js?v=5';
 
 const $ = id => document.getElementById(id);
 const key = 'travel-cards-v1';
@@ -10,6 +10,8 @@ let raw = null;
 try { raw = JSON.parse(localStorage.getItem(key)); } catch { /* Empty or unavailable storage. */ }
 let state = restore(raw, cards);
 let revealed = false;
+let clueCardId = null;
+let clue = null;
 let previous = null;
 let toastTimer;
 let activeUtterance = null;
@@ -79,10 +81,16 @@ function render() {
   $('practice').hidden = !card;
   $('complete').hidden = !!card;
   if (card) {
+    if (clueCardId !== card.id) {
+      clueCardId = card.id;
+      clue = chooseCloze(card);
+    }
     $('prompt').textContent = state.reverse ? card.en : card.ru;
     $('prompt').lang = state.reverse ? 'en' : 'ru';
     $('answer').textContent = state.reverse ? card.ru : card.en;
     $('answer').lang = state.reverse ? 'ru' : 'en';
+    $('clue').textContent = clue?.text || '';
+    $('clue').hidden = revealed || !clue;
     $('card').classList.toggle('revealed', revealed);
     $('translation').hidden = !revealed;
     $('examples').hidden = !revealed;
@@ -92,7 +100,8 @@ function render() {
     $('speak-word').hidden = !hasAudio;
     $('examples').replaceChildren();
     if (revealed) {
-      for (const text of card.examples) {
+      const examples = clue ? [card.examples[clue.index], ...card.examples.filter((_, index) => index !== clue.index)] : card.examples;
+      for (const text of examples) {
         const example = document.createElement(hasAudio ? 'button' : 'p');
         example.className = hasAudio ? 'example' : 'example no-audio';
         example.lang = 'en';
@@ -131,6 +140,7 @@ function assess(isKnown) {
   stopAudio();
   state = grade(state, isKnown);
   revealed = false;
+  clueCardId = null;
   render();
 }
 
@@ -155,7 +165,7 @@ $('undo').addEventListener('click', () => {
   stopAudio(); state = previous; revealed = false; clearNotice(); render();
 });
 $('restart').addEventListener('click', () => {
-  clearNotice(); stopAudio(); state = restart(state, cards); revealed = false; render();
+  clearNotice(); stopAudio(); state = restart(state, cards); revealed = false; clueCardId = null; render();
 });
 $('restore-hidden').addEventListener('click', () => {
   clearNotice(); state = { ...state, hidden: [] }; state.queue = newQueue(cards, state.known, []); revealed = false; render();
@@ -174,8 +184,8 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (reloading || !navigator.serviceWorker.controller) return;
     try {
-      if (sessionStorage.getItem('travel-cards-release-v4')) return;
-      sessionStorage.setItem('travel-cards-release-v4', '1');
+      if (sessionStorage.getItem('travel-cards-release-v5')) return;
+      sessionStorage.setItem('travel-cards-release-v5', '1');
     } catch { return; }
     reloading = true;
     location.reload();

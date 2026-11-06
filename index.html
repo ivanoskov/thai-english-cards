@@ -9,15 +9,15 @@
   <title>Слова в дорогу</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./style.css?v=4">
-  <script type="module" src="./app.js?v=4"></script>
+  <link rel="stylesheet" href="./style.css?v=5">
+  <script type="module" src="./app.js?v=5"></script>
 </head>
 <body>
   <main class="app" aria-label="Карточки английского">
     <div class="mode-row"><button id="direction" class="direction" aria-label="Сменить направление перевода">RU → EN</button></div>
     <section id="practice" class="practice" aria-label="Тренировка">
       <article id="card" class="card">
-        <button id="reveal" class="word" aria-label="Показать перевод" aria-expanded="false"><span id="prompt"></span></button>
+        <button id="reveal" class="word" aria-label="Показать перевод" aria-expanded="false"><span id="prompt"></span><span id="clue" class="clue" lang="en" hidden></span></button>
         <div id="translation" class="translation" hidden><span id="answer"></span><button id="speak-word" class="icon-button" aria-label="Послушать слово"></button></div>
         <div id="examples" class="examples" hidden></div>
         <button id="exclude" class="exclude" aria-label="Убрать это слово на этом устройстве">Убрать слово</button>

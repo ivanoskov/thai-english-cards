@@ -7,6 +7,21 @@ export function shuffle(items, random = Math.random) {
   return result;
 }
 
+export function maskedExamples(card) {
+  const escaped = card.en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+  const pattern = new RegExp(`\\b${escaped}\\b`, 'gi');
+  return card.examples.flatMap((example, index) => {
+    const text = example.replace(pattern, '____');
+    return text === example ? [] : [{ text, index }];
+  });
+}
+
+export function chooseCloze(card, random = Math.random) {
+  if (random() >= 0.5) return null;
+  const options = maskedExamples(card);
+  return options.length ? options[Math.floor(random() * options.length)] : null;
+}
+
 export function newQueue(cards, known = [], hidden = [], random = Math.random) {
   const excluded = new Set([...known, ...hidden]);
   return shuffle(cards.filter(card => !excluded.has(card.id)).map(card => card.id), random);
