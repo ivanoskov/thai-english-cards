@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cards } from '../cards.js';
-import { shuffle, newQueue, grade, restore, exclude, restart } from '../engine.js';
+import { shuffle, newQueue, grade, restore, exclude, restart, chooseDirection } from '../engine.js';
 
 test('160 unique words, stable original ids, three different examples per word', () => {
   assert.equal(cards.length, 160);
@@ -23,22 +23,22 @@ test('shuffle preserves input and includes all eligible words, without topic fil
   assert.ok(queue.every(id => ![1,2,3,4].includes(id)));
 });
 test('repeat delays a word and never duplicates or loses it, including a one-word deck', () => {
-  const state = { version:2, reverse:false, known:[], hidden:[], queue:[1,2,3,4,5,6] };
+  const state = { version:2, mode:'ru-en', known:[], hidden:[], queue:[1,2,3,4,5,6] };
   const next = grade(state, false, () => 0);
   assert.deepEqual(next.queue, [2,3,4,1,5,6]);
   assert.deepEqual(state.queue, [1,2,3,4,5,6]);
   assert.equal(new Set(next.queue).size, 6);
   assert.deepEqual(grade({...state, queue:[1]}, false).queue, [1]);
 });
-test('excluded words stay excluded across marking, reload, reverse and a new round', () => {
+test('excluded words stay excluded across marking, reload, mode changes and a new round', () => {
   let state = restore(null, cards);
   const id = state.queue[0];
   state = exclude(state);
   assert.ok(state.hidden.includes(id));
   assert.ok(!state.queue.includes(id));
-  const reloaded = restore(JSON.parse(JSON.stringify({...state, reverse:true})), cards);
+  const reloaded = restore(JSON.parse(JSON.stringify({...state, mode:'mixed'})), cards);
   assert.ok(!reloaded.queue.includes(id));
-  assert.ok(reloaded.reverse);
+  assert.equal(reloaded.mode,'mixed');
   const freshRound = restart(grade(reloaded, true), cards);
   assert.ok(!freshRound.queue.includes(id));
   assert.equal(freshRound.queue.length,159);
@@ -49,8 +49,15 @@ test('migration keeps previous learned words and ignores removed topic groups', 
   assert.equal(state.version,2);
   assert.equal(state.queue.length,158);
   assert.deepEqual(state.known,[1,2]);
+  assert.equal(state.mode,'en-ru');
   assert.ok(state.queue.includes(160));
   assert.equal(state.topic,undefined);
+});
+test('fixed modes keep their direction and mixed mode can pick either', () => {
+  assert.equal(chooseDirection('ru-en', () => 0), 'ru-en');
+  assert.equal(chooseDirection('en-ru', () => 0.99), 'en-ru');
+  assert.equal(chooseDirection('mixed', () => 0), 'en-ru');
+  assert.equal(chooseDirection('mixed', () => 0.99), 'ru-en');
 });
 test('adding words interleaves missing ids, reload of unchanged deck preserves its order', () => {
   const state = restore(null,cards);

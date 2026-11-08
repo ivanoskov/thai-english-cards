@@ -22,6 +22,10 @@ export function chooseCloze(card, random = Math.random) {
   return options.length ? options[Math.floor(random() * options.length)] : null;
 }
 
+export function chooseDirection(mode, random = Math.random) {
+  return mode === 'en-ru' || (mode === 'mixed' && random() < 0.5) ? 'en-ru' : 'ru-en';
+}
+
 export function newQueue(cards, known = [], hidden = [], random = Math.random) {
   const excluded = new Set([...known, ...hidden]);
   return shuffle(cards.filter(card => !excluded.has(card.id)).map(card => card.id), random);
@@ -59,5 +63,6 @@ export function restore(raw, cards) {
   const missing = [...eligible].filter(id => !queue.includes(id));
   // Older versions stored a single topic. Merge all words and shuffle new additions.
   const restoredQueue = raw?.version === 2 && !missing.length ? queue : shuffle([...queue, ...missing]);
-  return { version: 2, reverse: raw?.reverse === true, known, hidden, queue: restoredQueue };
+  const mode = ['ru-en', 'en-ru', 'mixed'].includes(raw?.mode) ? raw.mode : (raw?.reverse === true ? 'en-ru' : 'ru-en');
+  return { version: 2, mode, known, hidden, queue: restoredQueue };
 }

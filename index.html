@@ -9,12 +9,16 @@
   <title>Слова в дорогу</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./style.css?v=5">
-  <script type="module" src="./app.js?v=5"></script>
+  <link rel="stylesheet" href="./style.css?v=6">
+  <script type="module" src="./app.js?v=6"></script>
 </head>
 <body>
+  <svg class="mode-symbols" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-ru-en" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="icon-en-ru" viewBox="0 0 24 24"><path d="M20 12H4m6-6-6 6 6 6"/></symbol>
+    <symbol id="icon-mixed" viewBox="0 0 24 24"><path d="M3 6h3c4 0 6 12 11 12h4m-4-4 4 4-4 4M3 18h3c4 0 6-12 11-12h4m-4-4 4 4-4 4"/></symbol>
+  </svg>
   <main class="app" aria-label="Карточки английского">
-    <div class="mode-row"><button id="direction" class="direction" aria-label="Сменить направление перевода">RU → EN</button></div>
     <section id="practice" class="practice" aria-label="Тренировка">
       <article id="card" class="card">
         <button id="reveal" class="word" aria-label="Показать перевод" aria-expanded="false"><span id="prompt"></span><span id="clue" class="clue" lang="en" hidden></span></button>
@@ -22,8 +26,36 @@
         <div id="examples" class="examples" hidden></div>
         <button id="exclude" class="exclude" aria-label="Убрать это слово на этом устройстве">Убрать слово</button>
       </article>
-      <div id="actions" class="actions" hidden><button id="again" class="again">Повторить</button><button id="known" class="known">Знаю</button></div>
     </section>
+    <div id="controls" class="controls">
+      <div id="actions" class="actions" hidden><button id="again" class="again">Повторить</button><button id="known" class="known">Знаю</button></div>
+      <button id="direction" class="direction" aria-label="Выбрать режим" aria-haspopup="dialog" aria-controls="mode-picker">
+        <svg class="mode-icon" aria-hidden="true"><use id="direction-icon" href="#icon-ru-en"/></svg>
+        <span id="direction-label" aria-hidden="true">RU → EN</span>
+      </button>
+    </div>
+    <dialog id="mode-picker" class="mode-picker" aria-labelledby="mode-title" closedby="any">
+      <div class="mode-heading">
+        <h2 id="mode-title">Режим карточек</h2>
+        <button id="close-mode" class="close-mode" aria-label="Закрыть выбор режима">
+          <svg class="mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="mode-options">
+        <button class="mode-option" data-mode="ru-en" data-short="RU → EN" aria-pressed="true">
+          <svg class="mode-icon" aria-hidden="true"><use href="#icon-ru-en"/></svg>
+          <span>Русский → английский</span>
+        </button>
+        <button class="mode-option" data-mode="en-ru" data-short="EN → RU" aria-pressed="false">
+          <svg class="mode-icon" aria-hidden="true"><use href="#icon-en-ru"/></svg>
+          <span>Английский → русский</span>
+        </button>
+        <button class="mode-option" data-mode="mixed" data-short="Микс" aria-pressed="false">
+          <svg class="mode-icon" aria-hidden="true"><use href="#icon-mixed"/></svg>
+          <span>Вперемешку</span>
+        </button>
+      </div>
+    </dialog>
     <section id="complete" class="complete" hidden>
       <h1 id="complete-title">Круг пройден</h1>
       <button id="restart" class="known">Перемешать и повторить</button>

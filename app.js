@@ -1,17 +1,20 @@
-import { cards } from './cards.js?v=5';
-import { newQueue, grade, restore, exclude, restart, chooseCloze } from './engine.js?v=5';
+import { cards } from './cards.js?v=6';
+import { newQueue, grade, restore, exclude, restart, chooseCloze, chooseDirection } from './engine.js?v=6';
 
 const $ = id => document.getElementById(id);
 const key = 'travel-cards-v1';
 const icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg>';
 const hasAudio = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 const byId = new Map(cards.map(card => [card.id, card]));
+const modePicker = $('mode-picker');
+const modeOptions = [...modePicker.querySelectorAll('[data-mode]')];
 let raw = null;
 try { raw = JSON.parse(localStorage.getItem(key)); } catch { /* Empty or unavailable storage. */ }
 let state = restore(raw, cards);
 let revealed = false;
 let clueCardId = null;
 let clue = null;
+let cardDirection;
 let previous = null;
 let toastTimer;
 let activeUtterance = null;
@@ -76,25 +79,32 @@ function speak(text, button) {
 
 function render() {
   const card = byId.get(state.queue[0]);
-  $('direction').textContent = state.reverse ? 'EN → RU' : 'RU → EN';
-  $('direction').setAttribute('aria-label', state.reverse ? 'Английский → русский. Сменить направление' : 'Русский → английский. Сменить направление');
+  const selectedMode = modeOptions.find(option => option.dataset.mode === state.mode);
+  $('direction-label').textContent = selectedMode.dataset.short;
+  $('direction-icon').setAttribute('href', `#icon-${state.mode}`);
+  $('direction').setAttribute('aria-label', `Выбрать режим. Сейчас: ${selectedMode.textContent.trim()}`);
+  for (const option of modeOptions) option.setAttribute('aria-pressed', String(option === selectedMode));
+  const showActions = !!card && revealed;
+  $('actions').hidden = !showActions;
+  $('controls').classList.toggle('has-actions', showActions);
   $('practice').hidden = !card;
   $('complete').hidden = !!card;
   if (card) {
     if (clueCardId !== card.id) {
       clueCardId = card.id;
       clue = chooseCloze(card);
+      cardDirection = chooseDirection(state.mode);
     }
-    $('prompt').textContent = state.reverse ? card.en : card.ru;
-    $('prompt').lang = state.reverse ? 'en' : 'ru';
-    $('answer').textContent = state.reverse ? card.ru : card.en;
-    $('answer').lang = state.reverse ? 'ru' : 'en';
+    const reverse = cardDirection === 'en-ru';
+    $('prompt').textContent = reverse ? card.en : card.ru;
+    $('prompt').lang = reverse ? 'en' : 'ru';
+    $('answer').textContent = reverse ? card.ru : card.en;
+    $('answer').lang = reverse ? 'ru' : 'en';
     $('clue').textContent = clue?.text || '';
     $('clue').hidden = revealed || !clue;
     $('card').classList.toggle('revealed', revealed);
     $('translation').hidden = !revealed;
     $('examples').hidden = !revealed;
-    $('actions').hidden = !revealed;
     $('reveal').setAttribute('aria-expanded', String(revealed));
     $('reveal').setAttribute('aria-label', revealed ? 'Скрыть перевод' : 'Показать перевод');
     $('speak-word').hidden = !hasAudio;
@@ -149,7 +159,23 @@ $('reveal').addEventListener('click', flip);
 $('card').addEventListener('click', event => { if (!revealed && !event.target.closest('button')) flip(); });
 $('known').addEventListener('click', () => assess(true));
 $('again').addEventListener('click', () => assess(false));
-$('direction').addEventListener('click', () => { stopAudio(); state.reverse = !state.reverse; revealed = false; render(); });
+$('direction').addEventListener('click', () => {
+  stopAudio();
+  modePicker.showModal();
+  modeOptions.find(option => option.dataset.mode === state.mode).focus();
+});
+$('close-mode').addEventListener('click', () => modePicker.close());
+for (const option of modeOptions) {
+  option.addEventListener('click', () => {
+    if (state.mode !== option.dataset.mode) {
+      state.mode = option.dataset.mode;
+      cardDirection = chooseDirection(state.mode);
+      revealed = false;
+      render();
+    }
+    modePicker.close();
+  });
+}
 $('exclude').addEventListener('click', () => {
   if (!state.queue.length) return;
   clearNotice();
@@ -162,7 +188,7 @@ $('exclude').addEventListener('click', () => {
 });
 $('undo').addEventListener('click', () => {
   if (!previous) return;
-  stopAudio(); state = previous; revealed = false; clearNotice(); render();
+  stopAudio(); state = { ...previous, mode: state.mode }; revealed = false; clearNotice(); render();
 });
 $('restart').addEventListener('click', () => {
   clearNotice(); stopAudio(); state = restart(state, cards); revealed = false; clueCardId = null; render();
@@ -172,7 +198,7 @@ $('restore-hidden').addEventListener('click', () => {
 });
 $('speak-word').addEventListener('click', () => { const card = byId.get(state.queue[0]); if (card) speak(card.en, $('speak-word')); });
 document.addEventListener('keydown', event => {
-  if (event.target.closest('button, input, textarea, select')) return;
+  if (modePicker.open || event.target.closest('button, input, textarea, select')) return;
   if (event.key === ' ' && state.queue.length) { event.preventDefault(); flip(); }
   if (event.key === 'ArrowLeft') assess(false);
   if (event.key === 'ArrowRight') assess(true);
@@ -184,8 +210,8 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (reloading || !navigator.serviceWorker.controller) return;
     try {
-      if (sessionStorage.getItem('travel-cards-release-v5')) return;
-      sessionStorage.setItem('travel-cards-release-v5', '1');
+      if (sessionStorage.getItem('travel-cards-release-v6')) return;
+      sessionStorage.setItem('travel-cards-release-v6', '1');
     } catch { return; }
     reloading = true;
     location.reload();

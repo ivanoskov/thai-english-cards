@@ -1,5 +1,5 @@
-const CACHE = 'travel-cards-static-v5';
-const FILES = ['./', './index.html', './style.css?v=5', './app.js?v=5', './cards.js?v=5', './engine.js?v=5', './icon.svg', './manifest.webmanifest'];
+const CACHE = 'travel-cards-static-v6';
+const FILES = ['./', './index.html', './style.css?v=6', './app.js?v=6', './cards.js?v=6', './engine.js?v=6', './icon.svg', './manifest.webmanifest'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));
 });
